@@ -1,7 +1,7 @@
 {
   "name": "invisible-range-slider",
   "description": "",
-  "version": "0.2.1",
+  "version": "1.2.1",
   "main": "lib/index.js",
   "author": "Arek Smyk <hello@areksmyk.com> (areksmyk.com)",
   "repository": {
