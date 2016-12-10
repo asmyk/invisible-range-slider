@@ -1,5 +1,5 @@
 export default class InvisibleRangeSlider {
-  constructor({selector = "body", min = 0, max = 100, callback, value = 0, target = null} = {}) {
+  constructor({selector = "body", min = 0, max = 100, callback, value = 0, target = null, isInvertedDirection = false} = {}) {
     this.selector = selector;
     this.min = min;
     this.max = max;
@@ -7,6 +7,8 @@ export default class InvisibleRangeSlider {
     this.callback = callback;
     this._value = value;
     this.initialValue = value;
+    this.isInvertedDirection = isInvertedDirection;
+    this.events = { "start": "touchstart mousedown", "move": "touchmove mousemove", "stop": "touchend touchcancel mouseup mouseout" };
 
     this.reset();
     this.init();
@@ -15,9 +17,23 @@ export default class InvisibleRangeSlider {
   init() {
     this.container = this.target || document.querySelector(this.selector);
 
-    ("touchstart mousedown".split(" ")).forEach(event => this.container.addEventListener(event, this.onTouchStart.bind(this)));
-    ("touchmove mousemove".split(" ")).forEach(event => this.container.addEventListener(event, this.onTouchMove.bind(this)));
-    ("touchend touchcancel mouseup mouseout".split(" ")).forEach(event => this.container.addEventListener(event, this.onTouchStop.bind(this)));
+    this.onTouchStart = this.onTouchStart.bind(this);
+    this.onTouchMove = this.onTouchMove.bind(this);
+    this.onTouchStop = this.onTouchStop.bind(this);
+
+    this.startListening();
+  }
+
+  startListening() {
+    (this.events.start.split(" ")).forEach(event => this.container.addEventListener(event, this.onTouchStart));
+    (this.events.move.split(" ")).forEach(event => this.container.addEventListener(event, this.onTouchMove));
+    (this.events.stop.split(" ")).forEach(event => this.container.addEventListener(event, this.onTouchStop));
+  }
+
+  stopListening() {
+    (this.events.start.split(" ")).forEach(event => this.container.removeEventListener(event, this.onTouchStart));
+    (this.events.move.split(" ")).forEach(event => this.container.removeEventListener(event, this.onTouchMove));
+    (this.events.stop.split(" ")).forEach(event => this.container.removeEventListener(event, this.onTouchStop));
   }
 
   reset() {
@@ -54,8 +70,13 @@ export default class InvisibleRangeSlider {
     return x1 - x2;
   }
 
+  getPathDistance(distance, patch) {
+    let pathDistance = distance / patch * 100;
+    return (this.isInvertedDirection) ? pathDistance : pathDistance * -1;
+  }
+
   onDrag(targetX) {
-    let path = this.getDistance(this.startX, targetX) / this.container.clientWidth * 100;
+    let path = this.getPathDistance(this.getDistance(this.startX, targetX), this.container.clientWidth);
     this.value = path / 100 * (this.max - this.min);
     this.callback.call(this.callback, this.value);
   }
